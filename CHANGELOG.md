@@ -2,6 +2,10 @@
 
 [Token Note Hover](https://foundryvtt.com/packages/token-note-hover)
 
+## [4.0.4](https://github.com/jendave/token-note-hover/blob/main/CHANGELOG.md) (2026-02-03)
+
+* Fixed issue where sidebar would jump around if mouse was moved very quickly over tokens.
+
 ## [4.0.3](https://github.com/jendave/token-note-hover/blob/main/CHANGELOG.md) (2026-01-29)
 
 * [Blades in the Dark](https://foundryvtt.com/packages/blades-in-the-dark) improvements.

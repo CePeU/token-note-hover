@@ -72,6 +72,11 @@ Hooks.on('controlToken', (obj, html) => {
   }
 });
 
+// Guard against out-of-order hover timers when moving rapidly between tokens.
+let openTimeoutId = null;
+let closeTimeoutId = null;
+let hoverSeq = 0;
+
 /**
  * Hook on Note hover
  */
@@ -101,9 +106,28 @@ Hooks.on('hoverToken', (note, hovered) => {
         canvas.hud.tokenNoteHover = new TokenNoteHoverHUD();
       }
 
+      // Invalidate any previously scheduled open/close.
+      hoverSeq += 1;
+      const seq = hoverSeq;
+
+      if (openTimeoutId) {
+        clearTimeout(openTimeoutId);
+        openTimeoutId = null;
+      }
+
       if (!hovered) {
+        if (closeTimeoutId) {
+          clearTimeout(closeTimeoutId);
+          closeTimeoutId = null;
+        }
+
         if (!canvas.hud.tokenNoteHover.hover) {
-          setTimeout(() => canvas.hud.tokenNoteHover.hide(), tooltipCloseDelay);
+          closeTimeoutId = setTimeout(() => {
+            // Only close/hide if a newer hover hasn't occurred.
+            if (seq !== hoverSeq) return;
+            canvas.hud.tokenNoteHover.hide();
+            canvas.hud.tokenNoteHover.close();
+          }, tooltipCloseDelay);
         }
       }
 
@@ -113,7 +137,14 @@ Hooks.on('hoverToken', (note, hovered) => {
       }
 
       if (hovered && displayTooltip) {
-        setTimeout(() => {
+        if (closeTimeoutId) {
+          clearTimeout(closeTimeoutId);
+          closeTimeoutId = null;
+        }
+
+        openTimeoutId = setTimeout(() => {
+          // Only open if a newer hover hasn't occurred.
+          if (seq !== hoverSeq) return;
           if (note.interactionState === 1
             && (note.actor.permission >= ownershipPermissionsRequired
               || note.actor.ownership.default === -1)) {
@@ -123,6 +154,4 @@ Hooks.on('hoverToken', (note, hovered) => {
       }
     }
   }
-
-  return canvas.hud.tokenNoteHover.close();
 });
